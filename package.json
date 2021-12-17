@@ -1,0 +1,20 @@
+{
+  "name": "elm-site-template",
+  "version": "1.0.0",
+  "description": "elm site template",
+  "scripts": {
+    "format": "elm-format src/ --yes",
+    "gen": "elm-tailwind-modules --tailwind-config tailwind.config.js --dir ./gen",
+    "build": "npm run gen && shx mkdir -p public && shx rm -rf public/* && shx cp -R static/. public/ && elm make src/Main.elm --optimize --output=./public/dist/main.js",
+    "dev": "shx mkdir -p live && shx rm -rf live/* && shx cp -R static/. live/ && elm-live src/Main.elm --dir=live --start-page=index.html -- --debug --output=live/dist/main.js",
+    "postinstall": "elm-tooling install"
+  },
+  "devDependencies": {
+    "elm-live": "^4.0.2",
+    "elm-tailwind-modules": "^0.3.2",
+    "elm-tooling": "^1.7.0",
+    "postcss": "^8.4.4",
+    "shx": "^0.3.3",
+    "tailwindcss": "^2.2.19"
+  }
+}

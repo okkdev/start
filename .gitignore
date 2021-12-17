@@ -1,0 +1,24 @@
+# elm
+elm-stuff
+repl-temp-*
+
+# node
+node_modules
+
+# build
+dist
+
+# generated Tailwind modules
+gen
+
+# published site
+public
+
+# env var file
+.env
+
+# elm live dev server
+live
+
+# yarn
+yarn-error.log
