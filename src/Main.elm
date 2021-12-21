@@ -3,10 +3,11 @@ module Main exposing (..)
 import Browser
 import Css
 import Css.Global
-import Html.Styled as Html exposing (button, div, text)
+import Html.Styled as Html exposing (Html, button, div, text)
 import Html.Styled.Attributes exposing (css)
-import Html.Styled.Events exposing (onClick)
 import Tailwind.Utilities as Tw
+import Task
+import Time
 
 
 
@@ -28,13 +29,20 @@ main =
 
 
 type alias Model =
-    Int
+    { time : Time.Posix
+    , zone : Time.Zone
+
+    -- , weekday : Time.Weekday
+    }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( 0
-    , Cmd.none
+    ( Model (Time.millisToPosix 0) Time.utc
+    , Cmd.batch
+        [ Task.perform SetTime Time.now
+        , Task.perform SetZone Time.here
+        ]
     )
 
 
@@ -43,18 +51,18 @@ init _ =
 
 
 type Msg
-    = Increment
-    | Decrement
+    = SetTime Time.Posix
+    | SetZone Time.Zone
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Increment ->
-            ( model + 1, Cmd.none )
+        SetTime newTime ->
+            ( { model | time = newTime }, Cmd.none )
 
-        Decrement ->
-            ( model - 1, Cmd.none )
+        SetZone newZone ->
+            ( { model | zone = newZone }, Cmd.none )
 
 
 
@@ -63,7 +71,7 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Sub.none
+    Time.every 1000 SetTime
 
 
 
@@ -78,36 +86,35 @@ view model =
             div []
                 [ Css.Global.global Tw.globalStyles
                 , Html.main_ [ css [ Tw.flex, Tw.justify_center, Tw.items_center, Tw.gap_4, Tw.mt_5 ] ]
-                    [ button
-                        [ onClick Decrement
-                        , css
-                            [ Tw.bg_indigo_500
-                            , Tw.text_white
-                            , Tw.text_xl
-                            , Tw.font_bold
-                            , Tw.py_2
-                            , Tw.px_4
-                            , Tw.rounded
-                            , Css.hover [ Tw.bg_indigo_700 ]
-                            ]
-                        ]
-                        [ text "-" ]
-                    , div [ css [ Tw.text_4xl, Tw.font_bold ] ] [ text (String.fromInt model) ]
-                    , button
-                        [ onClick Increment
-                        , css
-                            [ Tw.bg_indigo_500
-                            , Tw.text_white
-                            , Tw.text_xl
-                            , Tw.font_bold
-                            , Tw.py_2
-                            , Tw.px_4
-                            , Tw.rounded
-                            , Css.hover [ Tw.bg_indigo_700 ]
-                            ]
-                        ]
-                        [ text "+" ]
+                    [ clock model
                     ]
                 ]
         ]
     }
+
+
+
+-- COMPONENTS
+
+
+clock : Model -> Html Msg
+clock model =
+    let
+        hours =
+            Time.toHour model.zone model.time
+                |> String.fromInt
+                |> String.padLeft 2 '0'
+
+        minutes =
+            Time.toMinute model.zone model.time
+                |> String.fromInt
+                |> String.padLeft 2 '0'
+
+        seconds =
+            Time.toSecond model.zone model.time
+                |> String.fromInt
+                |> String.padLeft 2 '0'
+    in
+    div []
+        [ text <| String.join ":" [ hours, minutes, seconds ]
+        ]
