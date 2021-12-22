@@ -1,10 +1,11 @@
 module Main exposing (..)
 
 import Browser
+import Config
 import Css
 import Css.Global
-import Html.Styled as Html exposing (Html, button, div, text)
-import Html.Styled.Attributes exposing (css)
+import Html.Styled as Html exposing (Html, div, text)
+import Html.Styled.Attributes as Attr exposing (css)
 import Tailwind.Utilities as Tw
 import Task
 import Time
@@ -80,13 +81,14 @@ subscriptions _ =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Elm Site Template"
+    { title = "New Tab"
     , body =
         [ Html.toUnstyled <|
             div []
                 [ Css.Global.global Tw.globalStyles
                 , Html.main_ [ css [ Tw.flex, Tw.justify_center, Tw.items_center, Tw.gap_4, Tw.mt_5 ] ]
                     [ clock model
+                    , bookmarkList Config.bookmarks
                     ]
                 ]
         ]
@@ -118,3 +120,9 @@ clock model =
     div []
         [ text <| String.join ":" [ hours, minutes, seconds ]
         ]
+
+
+bookmarkList : Config.Bookmarks -> Html Msg
+bookmarkList bookmarks =
+    div [] <|
+        List.map (\b -> Html.a [ Attr.href b.url ] [ text b.label ]) bookmarks
