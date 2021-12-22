@@ -1,18 +1,18 @@
 module Config exposing (..)
 
 
-type alias Bookmarks =
-    List Bookmark
+type alias Shortcuts =
+    List Shortcut
 
 
-type alias Bookmark =
+type alias Shortcut =
     { label : String
     , url : String
     }
 
 
-bookmarks : Bookmarks
-bookmarks =
+shortcuts : Shortcuts
+shortcuts =
     [ { label = "Test"
       , url = "https://test.com"
       }
