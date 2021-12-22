@@ -2,10 +2,12 @@ module Main exposing (..)
 
 import Browser
 import Config
-import Css
 import Css.Global
 import Html.Styled as Html exposing (Html, div, text)
 import Html.Styled.Attributes as Attr exposing (css)
+import Http
+import Json.Decode as D exposing (Decoder)
+import List
 import Tailwind.Utilities as Tw
 import Task
 import Time
@@ -32,15 +34,37 @@ main =
 type alias Model =
     { time : Time.Posix
     , zone : Time.Zone
+    , news : HNews
+    }
+
+
+type HNews
+    = Loading
+    | Failure
+    | Success HNPosts
+
+
+type alias HNPosts =
+    List HNPost
+
+
+type alias HNPost =
+    { id : Int
+    , title : String
+    , url : String
     }
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model (Time.millisToPosix 0) Time.utc
+    ( Model (Time.millisToPosix 0) Time.utc Loading
     , Cmd.batch
         [ Task.perform SetTime Time.now
         , Task.perform SetZone Time.here
+        , Http.get
+            { url = "https://api.hackerwebapp.com/news"
+            , expect = Http.expectJson GotNews newsDecoder
+            }
         ]
     )
 
@@ -52,6 +76,7 @@ init _ =
 type Msg
     = SetTime Time.Posix
     | SetZone Time.Zone
+    | GotNews (Result Http.Error HNPosts)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -62,6 +87,14 @@ update msg model =
 
         SetZone newZone ->
             ( { model | zone = newZone }, Cmd.none )
+
+        GotNews result ->
+            case result of
+                Ok posts ->
+                    ( { model | news = Success posts }, Cmd.none )
+
+                Err _ ->
+                    ( { model | news = Failure }, Cmd.none )
 
 
 
@@ -87,7 +120,7 @@ view model =
                 , Html.main_ [ css [ Tw.flex, Tw.flex_col, Tw.justify_center, Tw.items_center, Tw.gap_4, Tw.mt_5 ] ]
                     [ clock model
                     , shortcutList Config.shortcuts
-                    , hackernews model
+                    , hackernews model.news
                     ]
                 ]
         ]
@@ -210,6 +243,32 @@ shortcutList shortcuts =
         List.map (\s -> Html.a [ Attr.href s.url ] [ text s.label ]) shortcuts
 
 
-hackernews : Model -> Html Msg
-hackernews model =
-    div [] []
+hackernews : HNews -> Html Msg
+hackernews news =
+    case news of
+        Success posts ->
+            div [ css [ Tw.grid ] ] <|
+                (List.map
+                    (\p -> Html.a [ Attr.href p.url ] [ text p.title ])
+                    posts
+                    |> List.take 10
+                )
+
+        Loading ->
+            text "Loading..."
+
+        _ ->
+            text ""
+
+
+newsDecoder : Decoder HNPosts
+newsDecoder =
+    D.list postDecoder
+
+
+postDecoder : Decoder HNPost
+postDecoder =
+    D.map3 HNPost
+        (D.field "id" D.int)
+        (D.field "title" D.string)
+        (D.field "url" D.string)
