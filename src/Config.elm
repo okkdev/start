@@ -11,6 +11,16 @@ type alias Shortcut =
     }
 
 
+type Theme
+    = Dark
+    | Light
+
+
+defaultTheme : Theme
+defaultTheme =
+    Dark
+
+
 shortcuts : Shortcuts
 shortcuts =
     [ { label = "Test"

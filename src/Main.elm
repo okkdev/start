@@ -1,7 +1,8 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Browser
 import Config
+import Css
 import Css.Global
 import Html.Styled as Html exposing (Html, div, text)
 import Html.Styled.Attributes as Attr exposing (css)
@@ -17,7 +18,7 @@ import Time
 -- MAIN
 
 
-main : Program () Model Msg
+main : Program Flags Model Msg
 main =
     Browser.document
         { init = init
@@ -28,6 +29,13 @@ main =
 
 
 
+-- PORTS
+
+
+port themeListener : (String -> msg) -> Sub msg
+
+
+
 -- MODEL
 
 
@@ -35,6 +43,13 @@ type alias Model =
     { time : Time.Posix
     , zone : Time.Zone
     , news : HNews
+    , theme : Config.Theme
+    }
+
+
+type alias Flags =
+    { time : Int
+    , theme : String
     }
 
 
@@ -55,12 +70,12 @@ type alias HNPost =
     }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
-    ( Model (Time.millisToPosix 0) Time.utc Loading
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( Model (Time.millisToPosix flags.time) Time.utc Loading Config.defaultTheme
     , Cmd.batch
-        [ Task.perform SetTime Time.now
-        , Task.perform SetZone Time.here
+        [ Task.perform SetZone Time.here
+        , Task.perform identity <| Task.succeed (ChangeTheme flags.theme)
         , Http.get
             { url = "https://api.hackerwebapp.com/news"
             , expect = Http.expectJson GotNews newsDecoder
@@ -77,6 +92,7 @@ type Msg
     = SetTime Time.Posix
     | SetZone Time.Zone
     | GotNews (Result Http.Error HNPosts)
+    | ChangeTheme String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -96,6 +112,17 @@ update msg model =
                 Err _ ->
                     ( { model | news = Failure }, Cmd.none )
 
+        ChangeTheme theme ->
+            case theme of
+                "dark" ->
+                    ( { model | theme = Config.Dark }, Cmd.none )
+
+                "light" ->
+                    ( { model | theme = Config.Light }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
+
 
 
 -- SUBSCRIPTIONS
@@ -103,7 +130,10 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions _ =
-    Time.every 1000 SetTime
+    Sub.batch
+        [ Time.every 1000 SetTime
+        , themeListener ChangeTheme
+        ]
 
 
 
@@ -117,10 +147,23 @@ view model =
         [ Html.toUnstyled <|
             div []
                 [ Css.Global.global Tw.globalStyles
+                , Css.Global.global
+                    [ Css.Global.typeSelector "html" <|
+                        if isDark model.theme then
+                            [ Css.backgroundColor (Css.hex "232027")
+                            , Css.color (Css.hex "fef9f9")
+                            ]
+
+                        else
+                            [ Css.backgroundColor (Css.hex "fef9f9")
+                            , Css.color (Css.hex "232027")
+                            ]
+                    ]
                 , Html.main_ [ css [ Tw.flex, Tw.flex_col, Tw.justify_center, Tw.items_center, Tw.gap_4, Tw.mt_5 ] ]
                     [ clock model
                     , shortcutList Config.shortcuts
                     , hackernews model.news
+                    , text <| Debug.toString model.theme
                     ]
                 ]
         ]
@@ -238,9 +281,9 @@ fromMonth month =
 
 
 shortcutList : Config.Shortcuts -> Html Msg
-shortcutList shortcuts =
-    div [ css [ Tw.grid ] ] <|
-        List.map (\s -> Html.a [ Attr.href s.url ] [ text s.label ]) shortcuts
+shortcutList =
+    div [ css [ Tw.grid ] ]
+        << List.map (\s -> Html.a [ Attr.href s.url ] [ text s.label ])
 
 
 hackernews : HNews -> Html Msg
@@ -248,11 +291,10 @@ hackernews news =
     case news of
         Success posts ->
             div [ css [ Tw.grid ] ] <|
-                (List.map
+                List.map
                     (\p -> Html.a [ Attr.href p.url ] [ text p.title ])
-                    posts
-                    |> List.take 10
-                )
+                <|
+                    List.take 10 posts
 
         Loading ->
             text "Loading..."
@@ -272,3 +314,8 @@ postDecoder =
         (D.field "id" D.int)
         (D.field "title" D.string)
         (D.field "url" D.string)
+
+
+isDark : Config.Theme -> Bool
+isDark =
+    (==) Config.Dark
