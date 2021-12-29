@@ -3,30 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
   </head>
   <body>
-    <script src="/dist/main.js"></script>
-    <script>
-      let theme = ""
-      if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        theme = "dark"
-      } else if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-        theme = "light"
-      }
-
-      const app = Elm.Main.init({
-        flags: {
-          time: Date.now(),
-          theme: theme,
-        },
-      })
-
-      window
-        .matchMedia("(prefers-color-scheme: dark)")
-        .addEventListener("change", (e) => {
-          app.ports.themeListener.send(e.matches ? "dark" : "light")
-        })
-    </script>
+    <script src="./dist/main.js"></script>
+    <script src="./init.js"></script>
   </body>
 </html>
