@@ -12,6 +12,7 @@ import List
 import Tailwind.Utilities as Tw
 import Task
 import Time
+import Url
 
 
 
@@ -67,6 +68,7 @@ type alias HNPost =
     { id : Int
     , title : String
     , url : String
+    , comment_count : Int
     }
 
 
@@ -149,21 +151,21 @@ view model =
                 [ Css.Global.global Tw.globalStyles
                 , Css.Global.global
                     [ Css.Global.typeSelector "html" <|
-                        if isDark model.theme then
-                            [ Css.backgroundColor (Css.hex "232027")
-                            , Css.color (Css.hex "fef9f9")
-                            ]
+                        (++) [ Tw.text_lg, Tw.leading_5 ] <|
+                            if isDark model.theme then
+                                [ Css.backgroundColor (Css.hex "232027")
+                                , Css.color (Css.hex "fef9f9")
+                                ]
 
-                        else
-                            [ Css.backgroundColor (Css.hex "fef9f9")
-                            , Css.color (Css.hex "232027")
-                            ]
+                            else
+                                [ Css.backgroundColor (Css.hex "fef9f9")
+                                , Css.color (Css.hex "232027")
+                                ]
                     ]
-                , Html.main_ [ css [ Tw.flex, Tw.flex_col, Tw.justify_center, Tw.items_center, Tw.gap_4, Tw.mt_5 ] ]
+                , Html.main_ [ css [ Tw.flex, Tw.flex_col, Tw.justify_center, Tw.items_center, Tw.h_screen, Tw.gap_8 ] ]
                     [ clock model
-                    , shortcutList Config.shortcuts
                     , hackernews model.news
-                    , text <| Debug.toString model.theme
+                    , shortcutList Config.shortcuts
                     ]
                 ]
         ]
@@ -206,11 +208,11 @@ clock model =
                 |> String.padLeft 2 '0'
     in
     div [ css [ Tw.grid ] ]
-        [ div []
-            [ text <| String.join " " [ weekday, day, month ]
-            ]
-        , div []
+        [ div [ css [ Tw.text_5xl, Tw.font_black ] ]
             [ text <| String.join ":" [ hours, minutes, seconds ]
+            ]
+        , div [ css [ Tw.text_center ] ]
+            [ text <| String.join " " [ weekday, day, month ]
             ]
         ]
 
@@ -290,9 +292,30 @@ hackernews : HNews -> Html Msg
 hackernews news =
     case news of
         Success posts ->
-            div [ css [ Tw.grid ] ] <|
+            div [ css [ Tw.grid, Tw.gap_2 ] ] <|
                 List.map
-                    (\p -> Html.a [ Attr.href p.url ] [ text p.title ])
+                    (\p ->
+                        div [ css [ Tw.grid ] ]
+                            [ Html.a [ Attr.href p.url, css [ Tw.flex, Tw.items_baseline, Tw.gap_1 ] ]
+                                [ div [ css [ Tw.truncate ] ] [ text p.title ]
+                                , div [ css [ Tw.text_xs ] ] [ text <| getHost p.url ]
+                                ]
+                            , div []
+                                [ Html.a
+                                    [ Attr.href <| "https://news.ycombinator.com/item?id=" ++ String.fromInt p.id
+                                    , css [ Tw.text_xs ]
+                                    ]
+                                    [ text <|
+                                        (++) (String.fromInt p.comment_count) <|
+                                            if p.comment_count == 1 then
+                                                " comment"
+
+                                            else
+                                                " comments"
+                                    ]
+                                ]
+                            ]
+                    )
                 <|
                     List.take 10 posts
 
@@ -303,6 +326,16 @@ hackernews news =
             text ""
 
 
+getHost : String -> String
+getHost s =
+    case Url.fromString s of
+        Just url ->
+            url.host
+
+        _ ->
+            s
+
+
 newsDecoder : Decoder HNPosts
 newsDecoder =
     D.list postDecoder
@@ -310,10 +343,11 @@ newsDecoder =
 
 postDecoder : Decoder HNPost
 postDecoder =
-    D.map3 HNPost
+    D.map4 HNPost
         (D.field "id" D.int)
         (D.field "title" D.string)
         (D.field "url" D.string)
+        (D.field "comments_count" D.int)
 
 
 isDark : Config.Theme -> Bool
