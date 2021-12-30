@@ -149,9 +149,19 @@ view model =
         [ Html.toUnstyled <|
             div []
                 [ Css.Global.global Tw.globalStyles
-                , Css.Global.global
-                    [ Css.Global.typeSelector "html" <|
-                        (++) [ Tw.text_lg, Tw.leading_5 ] <|
+                , Html.main_
+                    [ css <|
+                        (++)
+                            [ Tw.leading_5
+                            , Tw.text_base
+                            , Tw.flex
+                            , Tw.flex_col
+                            , Tw.justify_center
+                            , Tw.items_center
+                            , Tw.h_screen
+                            , Tw.gap_8
+                            ]
+                        <|
                             if isDark model.theme then
                                 [ Css.backgroundColor (Css.hex "232027")
                                 , Css.color (Css.hex "fef9f9")
@@ -162,10 +172,10 @@ view model =
                                 , Css.color (Css.hex "232027")
                                 ]
                     ]
-                , Html.main_ [ css [ Tw.flex, Tw.flex_col, Tw.justify_center, Tw.items_center, Tw.h_screen, Tw.gap_8 ] ]
                     [ clock model
+
+                    -- , shortcutList Config.shortcuts
                     , hackernews model.news
-                    , shortcutList Config.shortcuts
                     ]
                 ]
         ]
@@ -284,7 +294,7 @@ fromMonth month =
 
 shortcutList : Config.Shortcuts -> Html Msg
 shortcutList =
-    div [ css [ Tw.grid ] ]
+    div [ css [ Tw.grid, Tw.grid_flow_col, Tw.auto_cols_auto, Tw.gap_5 ] ]
         << List.map (\s -> Html.a [ Attr.href s.url ] [ text s.label ])
 
 
