@@ -1,7 +1,7 @@
 {
-  "name": "elm-site-template",
+  "name": "start",
   "version": "1.0.0",
-  "description": "elm site template",
+  "description": "new tab start page",
   "scripts": {
     "format": "elm-format src/ --yes",
     "gen": "elm-tailwind-modules --tailwind-config tailwind.config.js --dir ./gen",
