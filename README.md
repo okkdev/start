@@ -2,6 +2,15 @@
 
 start is my personal simple "new tab" start page.
 
+![Screenshot](screenshot.png)
+
+## Features
+
+- Dark/Light mode
+- Date and Time
+- Hackernews
+- Shortcuts
+
 ## Dependencies
 
 You need to have npm/yarn installed.
