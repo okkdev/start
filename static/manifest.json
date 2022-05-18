@@ -1,9 +1,9 @@
 {
   "name": "start",
+  "description": "replaces the new tab page with simple hackernews",
   "manifest_version": 3,
   "version": "1.1",
   "chrome_url_overrides": {
     "newtab": "index.html"
-  },
-  "update_url": "https://raw.githubusercontent.com/okkdev/start/blob/main/updates.xml"
+  }
 }
