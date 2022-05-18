@@ -9,6 +9,7 @@ import Html.Styled.Attributes as Attr exposing (css)
 import Http
 import Json.Decode as D exposing (Decoder)
 import List
+import Tailwind.Breakpoints as Breakpoints
 import Tailwind.Utilities as Tw
 import Task
 import Time
@@ -159,6 +160,7 @@ view model =
                             , Tw.justify_center
                             , Tw.items_center
                             , Tw.h_screen
+                            , Tw.max_w_full
                             , Tw.gap_8
                             ]
                         <|
@@ -305,10 +307,10 @@ hackernews news =
             div [ css [ Tw.grid, Tw.gap_2 ] ] <|
                 List.map
                     (\p ->
-                        div [ css [ Tw.grid ] ]
-                            [ Html.a [ Attr.href p.url, css [ Tw.flex, Tw.items_baseline, Tw.gap_1 ] ]
+                        div [ css [ Tw.hidden, Breakpoints.sm [ Tw.grid ] ] ]
+                            [ Html.a [ Attr.href (checkHnUrl p.url), css [ Tw.flex, Tw.items_baseline, Tw.gap_1, Tw.min_w_0 ] ]
                                 [ div [ css [ Tw.truncate ] ] [ text p.title ]
-                                , div [ css [ Tw.text_xs ] ] [ text <| getHost p.url ]
+                                , div [ css [ Tw.text_xs, Tw.hidden, Breakpoints.md [ Tw.block ] ] ] [ text <| getHost p.url ]
                                 ]
                             , div []
                                 [ Html.a
@@ -343,7 +345,20 @@ getHost s =
             url.host
 
         _ ->
-            s
+            if String.startsWith "item?id" s then
+                "self"
+
+            else
+                s
+
+
+checkHnUrl : String -> String
+checkHnUrl url =
+    if String.startsWith "item?id" url then
+        "https://news.ycombinator.com/" ++ url
+
+    else
+        url
 
 
 newsDecoder : Decoder HNPosts
