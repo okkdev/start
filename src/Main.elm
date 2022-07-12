@@ -150,29 +150,31 @@ view model =
         [ Html.toUnstyled <|
             div []
                 [ Css.Global.global Tw.globalStyles
-                , Html.main_
-                    [ css <|
-                        (++)
-                            [ Tw.leading_5
-                            , Tw.text_base
-                            , Tw.flex
-                            , Tw.flex_col
-                            , Tw.justify_center
-                            , Tw.items_center
-                            , Tw.h_screen
-                            , Tw.max_w_full
-                            , Tw.gap_8
+                , Css.Global.global
+                    [ Css.Global.typeSelector "html"
+                        (if isDark model.theme then
+                            [ Css.backgroundColor (Css.hex "232027")
+                            , Css.color (Css.hex "fef9f9")
                             ]
-                        <|
-                            if isDark model.theme then
-                                [ Css.backgroundColor (Css.hex "232027")
-                                , Css.color (Css.hex "fef9f9")
-                                ]
 
-                            else
-                                [ Css.backgroundColor (Css.hex "fef9f9")
-                                , Css.color (Css.hex "232027")
-                                ]
+                         else
+                            [ Css.backgroundColor (Css.hex "fef9f9")
+                            , Css.color (Css.hex "232027")
+                            ]
+                        )
+                    ]
+                , Html.main_
+                    [ css
+                        [ Tw.leading_5
+                        , Tw.text_base
+                        , Tw.flex
+                        , Tw.flex_col
+                        , Tw.justify_center
+                        , Tw.items_center
+                        , Tw.h_screen
+                        , Tw.max_w_full
+                        , Tw.gap_8
+                        ]
                     ]
                     [ clock model
 
