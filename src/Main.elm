@@ -222,7 +222,7 @@ clock model =
                 |> String.padLeft 2 '0'
     in
     div [ css [ Tw.grid ] ]
-        [ div [ css [ Tw.text_5xl, Tw.font_black ] ]
+        [ div [ css [ Tw.text_5xl, Tw.font_black, Tw.tabular_nums ] ]
             [ text <| String.join ":" [ hours, minutes, seconds ]
             ]
         , div [ css [ Tw.text_center ] ]
